@@ -2,92 +2,115 @@ package utils
 
 import (
 	"bestceramic-parser/models"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/takuoki/clmconv"
 
 	"github.com/xuri/excelize/v2"
 )
 
-func productsSheet(f *excelize.File, products []models.Product) {
-	var titles []string = []string{"Название", "Цена", "Картинки"}
-	var features map[string]int = make(map[string]int)
+func productsSheet(f *excelize.File, collections []models.Collection, keys map[string]int) {
 	index := f.NewSheet("Товары")
 	f.SetActiveSheet(index)
-	productIndex := 2
-	lastIndex := 0
-
-	for i, title := range titles {
-		f.SetCellValue("Товары", clmconv.Itoa(i)+"1", title)
-		lastIndex = i
+	for k, v := range keys {
+		f.SetCellValue("Товары", clmconv.Itoa(v-1)+"1", k)
 	}
-
-	lastIndex++
-
-	for _, proproduct := range products {
-		f.SetCellValue("Товары", clmconv.Itoa(0)+strconv.Itoa(productIndex), proproduct.Name)
-		f.SetCellValue("Товары", clmconv.Itoa(1)+strconv.Itoa(productIndex), proproduct.Price)
-		f.SetCellValue("Товары", clmconv.Itoa(2)+strconv.Itoa(productIndex), strings.Join(proproduct.Images, ";"))
-		for k, v := range proproduct.Features {
-			_, ok := features[k]
-			if !ok {
-				f.SetCellValue("Товары", clmconv.Itoa(lastIndex)+"1", k)
-				features[k] = lastIndex
-				lastIndex++
+	i := 2
+	for _, c := range collections {
+		for _, p := range c.Products {
+			if p.Name == "" {
+				continue
 			}
-			f.SetCellValue("Товары", clmconv.Itoa(features[k])+strconv.Itoa(productIndex), v)
+			f.SetCellValue("Товары", clmconv.Itoa(keys["Имя"]-1)+strconv.Itoa(i), p.Name)
+			f.SetCellValue("Товары", clmconv.Itoa(keys["Картинки"]-1)+strconv.Itoa(i), p.Images)
+			f.SetCellValue("Товары", clmconv.Itoa(keys["Цена"]-1)+strconv.Itoa(i), p.Price)
+			for k, v := range p.Features {
+				f.SetCellValue("Товары", clmconv.Itoa(keys[k]-1)+strconv.Itoa(i), v)
+			}
+			i++
 		}
-		productIndex++
 	}
+	f.SetActiveSheet(index)
 }
 
-func collectionSheet(f *excelize.File, collection models.Collection) {
-	var titles []string = []string{"Название", "Цена", "Картинки", "Брэнд"}
+func collectionsSheet(f *excelize.File, collections []models.Collection, keys map[string]int) {
 	index := f.NewSheet("Коллекция")
 	f.SetActiveSheet(index)
-	lastIndex := 0
-
-	for i, title := range titles {
-		f.SetCellValue("Коллекция", clmconv.Itoa(i)+"1", title)
-
-		if title == "Название" {
-			f.SetCellValue("Коллекция", clmconv.Itoa(i)+"2", collection.Name)
-		}
-
-		if title == "Цена" {
-			f.SetCellValue("Коллекция", clmconv.Itoa(i)+"2", collection.Price)
-		}
-
-		if title == "Картинки" {
-			f.SetCellValue("Коллекция", clmconv.Itoa(i)+"2", collection.Image)
-		}
-
-		if title == "Брэнд" {
-			f.SetCellValue("Коллекция", clmconv.Itoa(i)+"2", collection.Brand)
-		}
-
-		lastIndex = i
+	i := 2
+	for k, v := range keys {
+		f.SetCellValue("Коллекция", clmconv.Itoa(v-1)+"1", k)
 	}
-
-	lastIndex++
-
+	for _, c := range collections {
+		f.SetCellValue("Коллекция", clmconv.Itoa(keys["Имя"]-1)+strconv.Itoa(i), c.Name)
+		f.SetCellValue("Коллекция", clmconv.Itoa(keys["Бренд"]-1)+strconv.Itoa(i), c.Brand)
+		f.SetCellValue("Коллекция", clmconv.Itoa(keys["Картинки"]-1)+strconv.Itoa(i), c.Image)
+		f.SetCellValue("Коллекция", clmconv.Itoa(keys["Цена"]-1)+strconv.Itoa(i), c.Price)
+		i++
+	}
 	f.SetActiveSheet(index)
 }
 
-func ExcelWrite(collection models.Collection) {
+func writeUniqueKeysCollection() {
+	var settingsKeysForCollections map[string]int = map[string]int{
+		"Имя":      1,
+		"Цена":     2,
+		"Бренд":    3,
+		"Картинки": 4,
+	}
+
+	file, err := json.Marshal(settingsKeysForCollections)
+	if err != nil {
+		fmt.Errorf(err.Error())
+	}
+	_ = ioutil.WriteFile("collectionsKeys.json", file, 755)
+}
+
+func writeUniqueKeysProduct(collections []models.Collection) {
+	var settingsKeysForProducts map[string]int = map[string]int{
+		"Имя":      1,
+		"Цена":     2,
+		"Картинки": 3,
+	}
+	i := len(settingsKeysForProducts)
+	for _, c := range collections {
+		for _, p := range c.Products {
+			for t, _ := range p.Features {
+				_, ok := settingsKeysForProducts[t]
+				if !ok {
+					settingsKeysForProducts[t] = i
+					i++
+				}
+			}
+		}
+	}
+
+	file, err := json.Marshal(settingsKeysForProducts)
+	if err != nil {
+		fmt.Errorf(err.Error())
+	}
+
+	_ = ioutil.WriteFile("productsKeys.json", file, 755)
+}
+
+func ExcelWriteMultipleData(collections []models.Collection, collectionsKeys map[string]int, productsKeys map[string]int, updateKeys bool) {
+	if updateKeys {
+		writeUniqueKeysCollection()
+		writeUniqueKeysProduct(collections)
+	}
 	f := excelize.NewFile()
-	collectionSheet(f, collection)
-	productsSheet(f, collection.Products)
+	collectionsSheet(f, collections, collectionsKeys)
+	productsSheet(f, collections, productsKeys)
 	if _, err := os.Stat("./data/"); os.IsNotExist(err) {
 		if err := os.Mkdir("data", os.ModePerm); err != nil {
 			log.Fatal(err)
 		}
 	}
-	if err := f.SaveAs("./data/" + collection.Name + ".xlsx"); err != nil {
+	if err := f.SaveAs("./data/" + collections[1].Brand + ".xlsx"); err != nil {
 		fmt.Println(err)
 	}
 }

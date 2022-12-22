@@ -40,8 +40,9 @@ func trimPriceString(str string) string {
 	return strings.ReplaceAll(r.ReplaceAllString(str, ""), "Цена от: ", "")
 }
 
-func Collection(c *colly.Collector, url string) {
+func Collection(c *colly.Collector, url string) models.Collection {
 	utils.OnRequest(c)
+	var collection models.Collection
 
 	c.OnXML(collectionMainBlock, func(x *colly.XMLElement) {
 		name := x.ChildText(collectionTitle)
@@ -49,9 +50,10 @@ func Collection(c *colly.Collector, url string) {
 		image := collectionImageCollector(x)
 		brand := x.ChildText(barnd)
 		products := productsCollector(x)
-		collection := models.NewCollection(name, price, image, brand, products)
-		utils.ExcelWrite(collection)
+		collection = models.NewCollection(name, price, image, brand, products)
 	})
 
 	c.Visit(url)
+
+	return collection
 }

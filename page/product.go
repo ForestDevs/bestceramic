@@ -20,7 +20,7 @@ func productFeaturesCollector(x *colly.XMLElement, col map[string]string) map[st
 	productFeaturesTitles := x.ChildTexts("//div[@class='product-characteristic__item-text']")
 	productFeaturesValues := x.ChildTexts("//div[@class='product-characteristic__item-value']")
 	for i := 0; i < len(productFeaturesTitles); i++ {
-		col[productFeaturesTitles[i]] = productFeaturesValues[i]
+		col[strings.ReplaceAll(productFeaturesTitles[i], ":", "")] = productFeaturesValues[i]
 	}
 	return col
 }

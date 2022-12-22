@@ -3,6 +3,8 @@
         "https://www.bestceramic.ru/section/metropolis-italon"
     ],
     "brands": [
+        "https://www.bestceramic.ru/manuf/diart",
         "https://www.bestceramic.ru/manuf/italon"
-    ]
+    ],
+    "updateKeys": true
 }
