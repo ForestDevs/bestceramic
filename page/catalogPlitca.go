@@ -23,7 +23,8 @@ func CatalogPlitca(c *colly.Collector, url string) []models.Collection {
 		nextPage := x.ChildAttr("//a[@class='pagination__item pagination__item_next']", "href")
 		collections = scrapCollections(x, collections)
 		if nextPage != "" {
-			CatalogPlitca(c, utils.Domain+nextPage)
+			cInstance := utils.NewCollector()
+			CatalogPlitca(cInstance, utils.Domain+nextPage)
 		}
 	})
 	c.Visit(url)

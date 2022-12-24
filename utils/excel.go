@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/takuoki/clmconv"
 
@@ -27,8 +28,8 @@ func productsSheet(f *excelize.File, collections []models.Collection, keys map[s
 				continue
 			}
 			f.SetCellValue("Товары", clmconv.Itoa(keys["Имя"]-1)+strconv.Itoa(i), p.Name)
-			f.SetCellValue("Товары", clmconv.Itoa(keys["Картинки"]-1)+strconv.Itoa(i), p.Images)
 			f.SetCellValue("Товары", clmconv.Itoa(keys["Цена"]-1)+strconv.Itoa(i), p.Price)
+			f.SetCellValue("Товары", clmconv.Itoa(keys["Картинки"]-1)+strconv.Itoa(i), strings.Join(p.Images, ";"))
 			for k, v := range p.Features {
 				f.SetCellValue("Товары", clmconv.Itoa(keys[k]-1)+strconv.Itoa(i), v)
 			}
@@ -82,8 +83,8 @@ func writeUniqueKeysProduct(collections []models.Collection) {
 			for t, _ := range p.Features {
 				_, ok := settingsKeysForProducts[t]
 				if !ok {
-					settingsKeysForProducts[t] = i
 					i++
+					settingsKeysForProducts[t] = i
 				}
 			}
 		}
