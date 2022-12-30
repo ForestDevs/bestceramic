@@ -6,12 +6,13 @@ import (
 	"bestceramic-parser/utils"
 	"encoding/json"
 	"io/ioutil"
+	"os"
 )
 
 type Config struct {
-	Collections []string `json: "collections"`
-	Brands      []string `json: "brands"`
-	UpdateKeys  bool     `json: "updateKeys"`
+	Collections []string `json:"collections"`
+	Brands      []string `json:"brands"`
+	UpdateKeys  bool     `json:"updateKeys"`
 }
 
 var collectionsKeys map[string]int
@@ -20,7 +21,7 @@ var productsKeys map[string]int
 func main() {
 
 	//cfg
-	file, err := ioutil.ReadFile("./config.json")
+	file, err := os.ReadFile("./config.json")
 	if err != nil {
 		panic(err)
 	}
@@ -32,7 +33,7 @@ func main() {
 	}
 
 	//collections
-	fileCollections, err := ioutil.ReadFile("./collectionsKeys.json")
+	fileCollections, err := os.ReadFile("./collectionsKeys.json")
 	if err != nil {
 		panic(err)
 	}

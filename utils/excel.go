@@ -111,7 +111,7 @@ func ExcelWriteMultipleData(collections []models.Collection, collectionsKeys map
 			log.Fatal(err)
 		}
 	}
-	if err := f.SaveAs("./data/" + collections[1].Brand + ".xlsx"); err != nil {
+	if err := f.SaveAs("./data/" + collections[0].Brand + ".xlsx"); err != nil {
 		fmt.Println(err)
 	}
 }
