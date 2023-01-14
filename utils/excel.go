@@ -16,6 +16,7 @@ import (
 )
 
 func productsSheet(f *excelize.File, collections []models.Collection, keys map[string]int) {
+	var unique []string = make([]string, 0)
 	index := f.NewSheet("Товары")
 	f.SetActiveSheet(index)
 	for k, v := range keys {
@@ -27,19 +28,30 @@ func productsSheet(f *excelize.File, collections []models.Collection, keys map[s
 			if p.Name == "" {
 				continue
 			}
-			f.SetCellValue("Товары", clmconv.Itoa(keys["Имя"]-1)+strconv.Itoa(i), p.Name)
-			f.SetCellValue("Товары", clmconv.Itoa(keys["Цена"]-1)+strconv.Itoa(i), p.Price)
-			f.SetCellValue("Товары", clmconv.Itoa(keys["Картинки"]-1)+strconv.Itoa(i), strings.Join(p.Images, ";"))
-			for k, v := range p.Features {
-				f.SetCellValue("Товары", clmconv.Itoa(keys[k]-1)+strconv.Itoa(i), v)
+			unq := true
+			for _, u := range unique {
+				if p.Name == u {
+					unq = false
+				}
 			}
-			i++
+			if unq {
+				f.SetCellValue("Товары", clmconv.Itoa(keys["Имя"]-1)+strconv.Itoa(i), p.Name)
+				f.SetCellValue("Товары", clmconv.Itoa(keys["Цена"]-1)+strconv.Itoa(i), p.Price)
+				f.SetCellValue("Товары", clmconv.Itoa(keys["Характеристики-цены"]-1)+strconv.Itoa(i), p.PriceAttrs)
+				f.SetCellValue("Товары", clmconv.Itoa(keys["Картинки"]-1)+strconv.Itoa(i), strings.Join(p.Images, ";"))
+				for k, v := range p.Features {
+					f.SetCellValue("Товары", clmconv.Itoa(keys[k]-1)+strconv.Itoa(i), v)
+				}
+				i++
+				unique = append(unique, p.Name)
+			}
 		}
 	}
 	f.SetActiveSheet(index)
 }
 
 func collectionsSheet(f *excelize.File, collections []models.Collection, keys map[string]int) {
+	var unique []string = make([]string, 0)
 	index := f.NewSheet("Коллекция")
 	f.SetActiveSheet(index)
 	i := 2
@@ -47,11 +59,20 @@ func collectionsSheet(f *excelize.File, collections []models.Collection, keys ma
 		f.SetCellValue("Коллекция", clmconv.Itoa(v-1)+"1", k)
 	}
 	for _, c := range collections {
-		f.SetCellValue("Коллекция", clmconv.Itoa(keys["Имя"]-1)+strconv.Itoa(i), c.Name)
-		f.SetCellValue("Коллекция", clmconv.Itoa(keys["Бренд"]-1)+strconv.Itoa(i), c.Brand)
-		f.SetCellValue("Коллекция", clmconv.Itoa(keys["Картинки"]-1)+strconv.Itoa(i), c.Image)
-		f.SetCellValue("Коллекция", clmconv.Itoa(keys["Цена"]-1)+strconv.Itoa(i), c.Price)
-		i++
+		unq := true
+		for _, u := range unique {
+			if c.Name == u {
+				unq = false
+			}
+		}
+		if unq {
+			f.SetCellValue("Коллекция", clmconv.Itoa(keys["Имя"]-1)+strconv.Itoa(i), c.Name)
+			f.SetCellValue("Коллекция", clmconv.Itoa(keys["Бренд"]-1)+strconv.Itoa(i), c.Brand)
+			f.SetCellValue("Коллекция", clmconv.Itoa(keys["Картинки"]-1)+strconv.Itoa(i), c.Image)
+			f.SetCellValue("Коллекция", clmconv.Itoa(keys["Цена"]-1)+strconv.Itoa(i), c.Price)
+			i++
+			unique = append(unique, c.Name)
+		}
 	}
 	f.SetActiveSheet(index)
 }
@@ -73,9 +94,10 @@ func writeUniqueKeysCollection() {
 
 func writeUniqueKeysProduct(collections []models.Collection) {
 	var settingsKeysForProducts map[string]int = map[string]int{
-		"Имя":      1,
-		"Цена":     2,
-		"Картинки": 3,
+		"Имя":                 1,
+		"Цена":                2,
+		"Характеристики-цены": 3,
+		"Картинки":            4,
 	}
 	i := len(settingsKeysForProducts)
 	for _, c := range collections {

@@ -11,7 +11,7 @@ import (
 const (
 	productMainBlock           = "//div[@class='product-single']"                                                // main block
 	productTitle               = "//h1[@itemprop='name']"                                                        // name
-	productPrice               = "//div[@class='plate-line__item']"                                              // main price
+	productPrice               = "//div[@class='product-info__wrap']//meta[@itemprop='price']"                   // main price
 	productImages              = "//div[@class='product-slider__item'][@data-src]"                               // images                                // product feateruse titiles from product card
 	productFeaturesDescription = "//div[@class='communication-prop__col'][1]//p[@class='tile-prop-tabs__value']" // valuse feauters
 )
@@ -39,10 +39,11 @@ func Product(c *colly.Collector, url string) models.Product {
 	c.OnXML(productMainBlock, func(x *colly.XMLElement) {
 		var productFeatures map[string]string = make(map[string]string)
 		name := x.ChildText(productTitle)
-		price := strings.ReplaceAll(trimPriceString(x.ChildText(productPrice)), " ", "")
+		price := x.ChildAttr(productPrice, "content")
+		priceAttrs := strings.Join(x.ChildTexts("//div[@class='product-info__wrap']//div[@class='plate__price']/following-sibling::node()"), "")
 		images := imagesCollector(x)
 		productFeatures = productFeaturesCollector(x, productFeatures)
-		product = models.NewProduct(name, price, images, productFeatures)
+		product = models.NewProduct(name, price, images, productFeatures, priceAttrs)
 	})
 	c.Visit(url)
 	return product

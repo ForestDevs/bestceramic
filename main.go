@@ -58,7 +58,9 @@ func main() {
 
 	if len(cfg.Brands) != 0 {
 		for _, url := range cfg.Brands {
-			utils.ExcelWriteMultipleData(page.CatalogPlitca(c, url), collectionsKeys, productsKeys, cfg.UpdateKeys)
+			var collections []models.Collection = make([]models.Collection, 0)
+			collections = page.CatalogPlitca(c, url, collections)
+			utils.ExcelWriteMultipleData(collections, collectionsKeys, productsKeys, cfg.UpdateKeys)
 		}
 
 	} else if len(cfg.Collections) != 0 {
