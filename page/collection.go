@@ -3,6 +3,7 @@ package page
 import (
 	"bestceramic-parser/models"
 	"bestceramic-parser/utils"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -20,7 +21,10 @@ const (
 
 func productsCollector(x *colly.XMLElement) []models.Product {
 	var products []models.Product
-	for _, cardHref := range x.ChildAttrs(collectionProductsCard, "href") {
+	brandName := x.ChildAttrs("//div[@class='product-page']/..//ul[contains(@class,'breadcrumbs')]/li", "data-text")
+	findOpts := fmt.Sprintf("//div[contains(@class,'item--product')]//dl//span[@class='markitem__content' and contains(text(),'%s')]/../../../..//a[@class='item__title']", brandName[len(brandName)-2])
+	for _, cardHref := range x.ChildAttrs(findOpts, "href") {
+		fmt.Println(utils.Domain + cardHref)
 		cInstance := utils.NewCollector()
 		products = append(products, Product(cInstance, utils.Domain+cardHref))
 	}

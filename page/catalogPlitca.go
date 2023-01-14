@@ -3,13 +3,17 @@ package page
 import (
 	"bestceramic-parser/models"
 	"bestceramic-parser/utils"
+	"fmt"
 	"strconv"
 
 	"github.com/gocolly/colly/v2"
 )
 
 func scrapCollections(x *colly.XMLElement, collections []models.Collection) []models.Collection {
-	for _, url := range x.ChildAttrs("//div[@class='item__body']//a[@class='item__title' and @href != '/section/']", "href") {
+	brandName := x.ChildAttrs("/../../../..//ul[contains(@class,'breadcrumbs')]/li", "data-text")
+	fmt.Println(brandName[len(brandName)-1])
+	findOpts := fmt.Sprintf("//div[@class='item__body']//a[@class='item__title' and @href != '/section/']/../dl//a[contains( @title, '%s')]/../../../a[@class='item__title']", brandName[len(brandName)-1])
+	for _, url := range x.ChildAttrs(findOpts, "href") {
 		cInstance := utils.NewCollector()
 		collection := Collection(cInstance, utils.Domain+url)
 		collections = append(collections, collection)

@@ -133,7 +133,14 @@ func ExcelWriteMultipleData(collections []models.Collection, collectionsKeys map
 			log.Fatal(err)
 		}
 	}
-	if err := f.SaveAs("./data/" + collections[0].Brand + ".xlsx"); err != nil {
+	colName := "def"
+	for _, c := range collections {
+		if c.Brand != "" {
+			colName = c.Brand
+			break
+		}
+	}
+	if err := f.SaveAs("./data/" + colName + ".xlsx"); err != nil {
 		fmt.Println(err)
 	}
 }
